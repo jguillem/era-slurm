@@ -175,7 +175,7 @@ def logValues():
 	#Generates logs with less than 10% and 50% of the process finished
 	if countAllocMem < thisPercent(10, totalSteps) or countAllocMem == thisPercent(50, totalSteps):	
 		#Wrong allocations
-		if eficiMem < 50.0 or eficiMaxMem < 50.0:
+		if eficiMem < 50.0 and eficiMaxMem < 50.0:
 			if os.path.exists(LOG_FILE_WRONG):
 				file = open('%s' % LOG_FILE_WRONG, 'a')
 				file.write("%s,%d,%d of %d,%.2f,%.2f,%.2f" % (user, int(jobID), countAllocMem, totalSteps, float(eficiCPU), float(eficiMem), float(eficiMaxMem)))
