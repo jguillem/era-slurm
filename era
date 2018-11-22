@@ -12,6 +12,7 @@ LD_LIBRARY_PATH = "/usr/local/lib:/usr/lib:/lib"
 
 
 def formatMEM(memFull):
+
 	format = memFull[-1:]
 	value = memFull.split(format,1)[0]
 	value = int(value.split(".",1)[0])
@@ -24,17 +25,20 @@ def formatMEM(memFull):
 	
 
 def convertMEM(MEM):
+
 	memString = str(MEM)
 	memFull = memString.split("=",1)[1]
 	memKylobyte = formatMEM(memFull)
 	return memKylobyte
 
 def convertAlloc(ALLOC):
+
 	ALLOC = ALLOC.split("=",1)[1]
 	return ALLOC
 
 
 def convertTIME(TIME):
+
 	hour = 0
 	minute = 0
 	second = 0
@@ -62,6 +66,7 @@ def convertTIME(TIME):
 	return float(day) + float(hour) + float(minute) + float(second)
 	
 def normalizeValue(Kilobytes):
+
 	size = Kilobytes * 1024
 	power = 1024
 	n = 0
@@ -75,7 +80,7 @@ def normalizeValue(Kilobytes):
 	return size
 
 def processCommands(outputList, outputListTwo):
-	
+		
 	p0 = subprocess.Popen(["/usr/bin/sacct", "-j", "%s" % jobID, "-o", "alloctres%25,MaxRSS,cputime,totalcpu%15,state", "-s", "CD"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
 	p1 = subprocess.Popen(["grep", "-v", "^-"], stdin=p0.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
 	p2 = subprocess.Popen(["tail", "-n", "+2"], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
@@ -87,8 +92,7 @@ def processCommands(outputList, outputListTwo):
 
 	p7 = subprocess.Popen(["sacct", "-j", "%s" % jobID, "-o", "User%25,jobid%25", "-X"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)						   
 	p8 = subprocess.Popen(["tail", "-n", "+3"], stdin=p7.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	#p9 = subprocess.Popen(["wc", "-l"], stdin=p8.stdout, stdout=subprocess.PIPE, shell=True)	
-
+	
 	outputOne = p4.communicate()[0]	
 	outputTwo = p6.communicate()[0]
 	outputThree = p8.communicate()[0]
@@ -112,13 +116,13 @@ def processCommands(outputList, outputListTwo):
 	p6.stdout.close()
 	p7.stdout.close()
         p8.stdout.close()
-        #p9.stdout.close()
-
+        
 def thisPercent(percent, totalSteps):	
+	
 	return int((float(percent)/100) * float(totalSteps))
 
 def generateDataFrame(outputList, outputListTwo):
-	#DataFrame creation
+	
 	outputDF = pd.DataFrame(outputList, columns=['allocTRES', 'maxMemK', 'cpuTime', 'totalCpuTime', 'state'])
 	allocDF = pd.DataFrame(outputDF.allocTRES.str.split(',').tolist(), columns=['CPU', 'allocMemK', 'Nodes'])
 	outputDF = pd.merge(allocDF,outputDF, left_index=True, right_index=True)
@@ -126,7 +130,6 @@ def generateDataFrame(outputList, outputListTwo):
 	outputDF.Nodes = outputDF.Nodes.apply(convertAlloc)
 	outputDF.allocMemK = outputDF.allocMemK.apply(convertMEM)
 	outputDF.maxMemK = outputDF.maxMemK.apply(formatMEM)
-	
 	outputDFTwo = pd.DataFrame(outputListTwo, columns=['User', 'Jobid'])
 	
 	del outputDF['allocTRES']
@@ -134,6 +137,7 @@ def generateDataFrame(outputList, outputListTwo):
 	return outputDF, outputDFTwo
 
 def printValues():
+	
 	print "\nJob ID: %d" %int(jobID)
 	print "User name: %s" %user
 	print "Completed Steps: %d of %d" %(countAllocMem, totalSteps)
@@ -148,8 +152,8 @@ def printValues():
 	print bcolors.FAIL + "Allocated memory by step/array: %s\n" %AllocatedMem + bcolors.ENDC
 
 def logValues():
+	
 	if countAllocMem == thisPercent(10, totalSteps) or countAllocMem > thisPercent(50, totalSteps):	
-		#print "steps %d of total steps %d percend %.2f%%" %(countAllocMem, totalSteps, thisPercent(50, totalSteps))
 		if eficiMem < 50.0 or eficiMaxMem < 50.0:
 			if os.path.exists(LOG_FILE):
 				file = open('%s' % LOG_FILE, 'a')
@@ -162,6 +166,7 @@ def logValues():
 				file.write("\n")
 				file.close()
 class bcolors:
+	
 	HEADER = '\033[95m'
 	OKBLUE = '\033[94m'
 	OKGREEN = '\033[92m'
@@ -172,6 +177,7 @@ class bcolors:
 	UNDERLINE = '\033[4m'
 
 def calcTotalSteps(jobId):
+	
 	totalSteps = 1
 	
 	if "-" in str(jobId):
@@ -180,7 +186,6 @@ def calcTotalSteps(jobId):
 		else:
 			totalSteps = int(jobId[jobId.find("-")+1:jobId.find("]")])
 	
-	#print "DEBUG!! total steps %d" %totalSteps	
 	return int(totalSteps)
 
 if __name__ == "__main__":
@@ -198,8 +203,7 @@ if __name__ == "__main__":
 			jobID = sys.argv[2]
 
 		processCommands(outputList, outputListTwo)
-		
-		#print "DEBUG!! outputList %d outputListTwo %d" %(len(outputList), len(outputListTwo))		
+						
 		if len(outputList) and len(outputListTwo):
 
 			outputDF, outputDFTwo = generateDataFrame(outputList, outputListTwo)

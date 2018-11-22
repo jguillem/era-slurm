@@ -20,15 +20,18 @@ def generateDataFrame(outputList):
 	outputDF = pd.DataFrame(outputList, columns=['User', 'JobID', 'Steps', 'CPU', 'MemAverage', 'MemMin'])
 	return outputDF
 
+def sendMail(eraSortDF):
+	
+
 if __name__ == "__main__":
 	outputList = []
 	processCommands(outputList)
 
 	if len(outputList):
-		eraDF = generateDataFrame(outputList)
-		#print eraDF.JobID.unique()
-		#print eraDF.MemMin
+		eraDF = generateDataFrame(outputList)		
 		eraUniqueDF = eraDF.drop_duplicates(subset='JobID')
 		eraSortDF = eraUniqueDF.sort(['JobID'])
 		print eraSortDF
 		
+		if not eraSortDF.empty:
+			sendMail(eraSortDF)
