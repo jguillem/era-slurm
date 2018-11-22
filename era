@@ -6,10 +6,10 @@ import subprocess
 import pandas as pd
 import numpy as np
 
-LOG_FILE = "/var/log/slurm/era.log"
+LOG_FILE_GOOD = "/var/log/slurm/eraGood.log"
+LOG_FILE_WRONG = "/var/log/slurm/eraWrong.log"
 PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 LD_LIBRARY_PATH = "/usr/local/lib:/usr/lib:/lib"
-
 
 def formatMEM(memFull):
 
@@ -107,15 +107,14 @@ def processCommands(outputList, outputListTwo):
 		for idx, line in enumerate(outputThree.splitlines()):
 			outputListTwo.append(line.split())
 
-
 	p1.stdout.close()
-        p2.stdout.close()
-        p3.stdout.close()
+	p2.stdout.close()
+	p3.stdout.close()
 	p4.stdout.close()
 	p5.stdout.close()
 	p6.stdout.close()
 	p7.stdout.close()
-        p8.stdout.close()
+	p8.stdout.close()
         
 def thisPercent(percent, totalSteps):	
 	
@@ -151,20 +150,59 @@ def printValues():
 	print bcolors.WARNING  + "Minimum memory required by step/array: %s" %MaxUsedMem + bcolors.ENDC
 	print bcolors.FAIL + "Allocated memory by step/array: %s\n" %AllocatedMem + bcolors.ENDC
 
+def printHelp():
+		print "era [<OPTION>]"
+                print "         Valid <OPTION> values are:"
+                print "         jobid:"
+                print "                 The jobid"
+                print "EXAMPLE"
+                print "         era 99744\n"
+                print "         Job ID: 99744"
+                print "         Completed Steps: 759 of 861"
+                print "         Total allocated CPU: 1518"
+                print "         CPU Efficiency: 96.32%"
+                print "         Total allocated Memory: 17.79T"
+                print "         Total Used Memory: 1.26T"
+                print "         Memory Efficiency (Average): 7.08%"
+                print "         Memory Efficiency (Minimum memory required): 7.28%\n"
+
+                print "         Minimum memory required by step/array: 1.75G"
+                print "         Allocated memory by step/array: 24.00G\n"
+
+
 def logValues():
 	
-	if countAllocMem == thisPercent(10, totalSteps) or countAllocMem > thisPercent(50, totalSteps):	
+	#Generates logs with less than 10% and 50% of the process finished
+	if countAllocMem < thisPercent(10, totalSteps) or countAllocMem == thisPercent(50, totalSteps):	
+		#Wrong allocations
 		if eficiMem < 50.0 or eficiMaxMem < 50.0:
-			if os.path.exists(LOG_FILE):
-				file = open('%s' % LOG_FILE, 'a')
+			if os.path.exists(LOG_FILE_WRONG):
+				file = open('%s' % LOG_FILE_WRONG, 'a')
 				file.write("%s,%d,%d of %d,%.2f,%.2f,%.2f" % (user, int(jobID), countAllocMem, totalSteps, float(eficiCPU), float(eficiMem), float(eficiMaxMem)))
 				file.write("\n")
 				file.close()
 			else:
-				file = open('myfile.dat', 'w+')
+				file = open('%s' % LOG_FILE_WRONG, 'w+')
 				file.write("%s,%d,%d of %d,%.2f,%.2f,%.2f" % (user, int(jobID), countAllocMem, totalSteps, float(eficiCPU), float(eficiMem), float(eficiMaxMem)))
 				file.write("\n")
 				file.close()
+		#Good allocations
+		else:
+			print "DEBUG 1"
+			if os.path.exists(LOG_FILE_GOOD):
+				print "DEBUG 2"
+                                file = open('%s' % LOG_FILE_GOOD, 'a')
+                                file.write("%s,%d,%d of %d,%.2f,%.2f,%.2f" % (user, int(jobID), countAllocMem, totalSteps, float(eficiCPU), float(eficiMem), float(eficiMaxMem)))
+                                file.write("\n")
+                                file.close()
+                        else:
+				print "DEBUG 3"
+                                file = open('%s' % LOG_FILE_GOOD, 'w+')
+                                file.write("%s,%d,%d of %d,%.2f,%.2f,%.2f" % (user, int(jobID), countAllocMem, totalSteps, float(eficiCPU), float(eficiMem), float(eficiMaxMem)))
+                                file.write("\n")
+                                file.close()
+
+
 class bcolors:
 	
 	HEADER = '\033[95m'
@@ -259,21 +297,4 @@ if __name__ == "__main__":
 				
 	
 	else:
-		print "era [<OPTION>]"
-		print "		Valid <OPTION> values are:"
-		print "		jobid:"
-		print "			The jobid"
-		print "EXAMPLE"
-		print "		era 99744\n"
-		print "		Job ID: 99744"
-		print "		Completed Steps: 759 of 861"
-		print "		Total allocated CPU: 1518"
-		print "		CPU Efficiency: 96.32%"
-		print "		Total allocated Memory: 17.79T"
-		print "		Total Used Memory: 1.26T"
-		print "		Memory Efficiency (Average): 7.08%"
-		print "		Memory Efficiency (Minimum memory required): 7.28%\n"
-				
-		print "		Minimum memory required by step/array: 1.75G"
-		print "		Allocated memory by step/array: 24.00G\n"
-				
+		printHelp()
