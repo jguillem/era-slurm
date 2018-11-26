@@ -5,6 +5,8 @@ import sys
 import subprocess
 import pandas as pd
 import numpy as np
+import time
+import datetime
 
 LOG_FILE_GOOD = "/var/log/slurm/eraGood.log"
 LOG_FILE_WRONG = "/var/log/slurm/eraWrong.log"
@@ -169,40 +171,39 @@ def printHelp():
                 print "         Minimum memory required by step/array: 1.75G"
                 print "         Allocated memory by step/array: 24.00G\n"
 
+def writeLog(LOG_FILE):
+	month = datetime.date.today().strftime("%a")
+	day = datetime.date.today().strftime("%d")
+	hour = time.strftime("%X")
+
+
+	if os.path.exists(LOG_FILE):
+		file = open('%s' % LOG_FILE, 'a')		
+	else:
+		file = open('%s' % LOG_FILE, 'w+')
+		
+	file.write("%s,%s,%s,%s,%d,%d,%d,%.2f,%.2f,%.2f" % (month, day, hour, user, int(jobID), countAllocMem, totalSteps, float(eficiCPU), float(eficiMem), float(eficiMaxMem)))
+	file.write("\n")
+	file.close()
+
+
 
 def logValues():
 	
 	#Generates logs with less than 10% and 50% of the process finished
-	if countAllocMem < thisPercent(10, totalSteps) or countAllocMem == thisPercent(50, totalSteps):	
-		#Wrong allocations
-		if eficiMem < 50.0 and eficiMaxMem < 50.0:
-			if os.path.exists(LOG_FILE_WRONG):
-				file = open('%s' % LOG_FILE_WRONG, 'a')
-				file.write("%s,%d,%d of %d,%.2f,%.2f,%.2f" % (user, int(jobID), countAllocMem, totalSteps, float(eficiCPU), float(eficiMem), float(eficiMaxMem)))
-				file.write("\n")
-				file.close()
-			else:
-				file = open('%s' % LOG_FILE_WRONG, 'w+')
-				file.write("%s,%d,%d of %d,%.2f,%.2f,%.2f" % (user, int(jobID), countAllocMem, totalSteps, float(eficiCPU), float(eficiMem), float(eficiMaxMem)))
-				file.write("\n")
-				file.close()
-		#Good allocations
-		else:
-			print "DEBUG 1"
-			if os.path.exists(LOG_FILE_GOOD):
-				print "DEBUG 2"
-                                file = open('%s' % LOG_FILE_GOOD, 'a')
-                                file.write("%s,%d,%d of %d,%.2f,%.2f,%.2f" % (user, int(jobID), countAllocMem, totalSteps, float(eficiCPU), float(eficiMem), float(eficiMaxMem)))
-                                file.write("\n")
-                                file.close()
-                        else:
-				print "DEBUG 3"
-                                file = open('%s' % LOG_FILE_GOOD, 'w+')
-                                file.write("%s,%d,%d of %d,%.2f,%.2f,%.2f" % (user, int(jobID), countAllocMem, totalSteps, float(eficiCPU), float(eficiMem), float(eficiMaxMem)))
-                                file.write("\n")
-                                file.close()
+	#Wrong allocations
+	if eficiMem < 50.0: 
+		if countAllocMem < thisPercent(10, totalSteps):
+                        writeLog(LOG_FILE_WRONG)
 
-
+	elif eficiMaxMem < 50.0:
+		if thisPercent(10, totalSteps) <= countAllocMem <= thisPercent(50, totalSteps):
+			writeLog(LOG_FILE_WRONG)	
+			
+	#Good allocations
+	else:
+		writeLog(LOG_FILE_GOOD)
+		
 class bcolors:
 	
 	HEADER = '\033[95m'
@@ -292,8 +293,10 @@ if __name__ == "__main__":
 			else:
 				logValues()
 		else: 
-			#sys.exit()
-			print "There are no finished steps for the job %s" %jobID
+			if sys.argv[1] == "-e":
+				sys.exit()
+			else:
+				print "There are no finished steps for the job %s" %jobID
 				
 	
 	else:
