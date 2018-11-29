@@ -143,14 +143,26 @@ def printValues():
 	print "User name: %s" %user
 	print "Completed Steps: %d of %d" %(countAllocMem, totalSteps)
 	print "Total allocated CPU: %d" %int(cpuAlloc)
-	print "CPU Efficiency: %.2f%%" %float(eficiCPU)			
-	print "Total allocated Memory: %s" %totalAllocMemStr			
-	print "Total Used Memory: %s" %totalMaxMemStr
-	print "Memory Efficiency (Average): %.2f%%" %float(eficiMem)
-	print "Memory Efficiency (Minimum memory required): %.2f%% \n" %float(eficiMaxMem)
 	
-	print bcolors.WARNING  + "Minimum memory required by step/array: %s" %MaxUsedMem + bcolors.ENDC
-	print bcolors.FAIL + "Allocated memory by step/array: %s\n" %AllocatedMem + bcolors.ENDC
+	if eficiCPU >= 50.0:
+		print bcolors.OKGREEN + "CPU Efficiency: %.2f%%" %float(eficiCPU) + bcolors.ENDC
+	else:
+		print bcolors.FAIL + "CPU Efficiency: %.2f%%" %float(eficiCPU) + bcolors.ENDC
+	print "Total allocated Memory: %s" %totalAllocMemStr			
+	
+	print "Total Used Memory: %s" %totalMaxMemStr
+	
+	if eficiMem >= 50.0:
+		print bcolors.OKGREEN + "Memory Efficiency (Average): %.2f%%" %float(eficiMem) + bcolors.ENDC
+	else:
+		print bcolors.FAIL + "Memory Efficiency (Average): %.2f%%" %float(eficiMem) + bcolors.ENDC
+	if eficiMaxMem >= 50.0:
+		print bcolors.OKGREEN + "Memory Efficiency (Minimum memory required): %.2f%% \n" %float(eficiMaxMem) + bcolors.ENDC
+	else:	
+		print bcolors.FAIL + "Memory Efficiency (Minimum memory required): %.2f%% \n" %float(eficiMaxMem) + bcolors.ENDC
+	
+	print bcolors.HEADER  + "Minimum memory required by this job until now: %s" %MaxUsedMem + bcolors.ENDC
+	print bcolors.HEADER + "You have reserved this amount: %s\n" %AllocatedMem + bcolors.ENDC
 
 def printHelp():
 		print "era [<OPTION>]"
