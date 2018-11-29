@@ -43,6 +43,6 @@ if __name__ == "__main__":
 				eraProcess = subprocess.Popen(["era", "%d" % int(row["JobID"])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)				
 				eraOutput = eraProcess.communicate()[0]
 
-				#print eraOutput
+				print eraOutput
 				
-				sendMail("hpccns@upf.edu",eraOutput)
+				#sendMail("hpccns@upf.edu",eraOutput)

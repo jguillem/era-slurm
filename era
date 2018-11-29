@@ -202,7 +202,6 @@ def writeLog(LOG_FILE):
 
 def logValues():
 	
-	#Generates logs with less than 10% and 50% of the process finished
 	#Wrong allocations
 	if eficiMem < 50.0: 
 		if countAllocMem < thisPercent(10, totalSteps):
