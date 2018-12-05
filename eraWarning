@@ -48,13 +48,12 @@ if __name__ == "__main__":
 		eraDF = generateDataFrame(outputList)		
 		eraUniqueDF = eraDF.drop_duplicates(subset='JobID')
 		eraSortDF = eraUniqueDF.sort(['JobID'])
-		#print eraSortDF
-		
-		
+				
 		if not eraSortDF.empty:
 			for index, row in eraSortDF.iterrows():
 				eraProcess = subprocess.Popen(["era", "%d" % int(row["JobID"])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)				
 				eraOutput = eraProcess.communicate()[0]
 				
-				#email = ldapSearch(row["User"])
-				sendMail("hpccns@upf.edu",row["JobID"])
+				email = ldapSearch(row["User"])
+				print "%s %s" %(row["JobID"], email)
+				#sendMail("hpccns@upf.edu",row["JobID"])
