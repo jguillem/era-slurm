@@ -21,11 +21,31 @@ def generateDataFrame(outputList):
 	outputDF = pd.DataFrame(outputList, columns=['Mounth', 'Day', 'Hour', 'User', 'JobID', 'Step', 'TotalStep', 'CPU', 'MemAverage', 'MemMin'])
 	return outputDF
 
-def sendMail(to, job):
-	subject = "ERA Log - Cluster Brain - CNS UPF"
-	
-	cmd = """era "{b}" | ansi2html | mailx -a 'Content-Type: text/html' -s "{s}" "{to}" 2>/dev/null""".format(
-            b=job, s=subject, to=to
+def sendMail(to, jobID):
+	print jobID
+	subject = "Cluster Brain CNS - Incorrect Resources Reservation"
+	p0 = subprocess.Popen(["era", "%s" %jobID], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	p1 = subprocess.Popen(["ansi2html"], stdin=p0.stdout, stdout=subprocess.PIPE)
+
+	eraOutput = p1.communicate()[0]
+
+	message = """Dear user,
+
+Please review the resource reservation parameters of their jobs on the cluster torn Brain.
+You are using less than 50% of the reserved resources of the job below: """
+
+	index = eraOutput.rfind('<pre class="ansi2html-content">')
+	lenIndex = len('<pre class="ansi2html-content">')
+	eraOutput = eraOutput[:index+31] + "\n" + message + "\n" + eraOutput[index+lenIndex:]
+
+	#conversor = Ansi2HTMLConverter()
+	#erahtml = """era "{b}" | ansi2html""".format(
+        #    b=job
+        #)
+	#print eraOutput
+
+	cmd = """echo '{e}' | mailx -a 'Content-Type: text/html' -s "{s}" "{to}" 2>/dev/null""".format(
+          e=eraOutput, s=subject, to=to
         )
 	os.system(cmd)	
 	
@@ -54,6 +74,6 @@ if __name__ == "__main__":
 				eraProcess = subprocess.Popen(["era", "%d" % int(row["JobID"])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)				
 				eraOutput = eraProcess.communicate()[0]
 				
-				email = ldapSearch(row["User"])
-				print "%s %s" %(row["JobID"], email)
-				#sendMail("hpccns@upf.edu",row["JobID"])
+				#email = ldapSearch(row["User"])
+				#print "%s %s" %(row["JobID"], email)
+				sendMail("hpccns@upf.edu",row["JobID"])
