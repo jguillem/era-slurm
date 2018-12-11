@@ -34,19 +34,25 @@ def sendMail(to, jobID):
 Please review the resource reservation parameters of their jobs on the cluster torn Brain.
 You are using less than 50% of the reserved resources of the job below: """
 
+	farewell = """
+Best,
+	
+Slurm queue System
+
+"""
 	index = eraOutput.rfind('<pre class="ansi2html-content">')
 	lenIndex = len('<pre class="ansi2html-content">')
 	eraOutput = eraOutput[:index+31] + "\n" + message + "\n" + eraOutput[index+lenIndex:]
 
-	#conversor = Ansi2HTMLConverter()
-	#erahtml = """era "{b}" | ansi2html""".format(
-        #    b=job
-        #)
+	indexFare = eraOutput.rfind('</pre>')
+	eraOutput = eraOutput[:indexFare-1] + "\n" + farewell + "\n" + eraOutput[indexFare:]
+	
 	#print eraOutput
 
 	cmd = """echo '{e}' | mailx -a 'Content-Type: text/html' -s "{s}" "{to}" 2>/dev/null""".format(
           e=eraOutput, s=subject, to=to
         )
+
 	os.system(cmd)	
 	
 def ldapSearch(User):
