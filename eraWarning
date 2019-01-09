@@ -6,12 +6,16 @@ import subprocess
 import pandas as pd
 import numpy as np
 import ldap
+import gzip
+import shutil
+from ansi2html import Ansi2HTMLConverter
+
+LOG_FILE = "/var/log/slurm/eraWrong.log"
 
 def processCommands(outputList):
-	p0 = subprocess.Popen(["cat", "/var/log/slurm/eraWrong.log"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	p0 = subprocess.Popen(["cat", "%s" %LOG_FILE], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	output = p0.communicate()[0]
 
-	#print output
 	for idx, line in enumerate(output.splitlines()):
                 outputList.append(line.split(","))
 
@@ -25,14 +29,16 @@ def sendMail(to, jobID):
 	print jobID
 	subject = "Cluster Brain CNS - Incorrect Resources Reservation"
 	p0 = subprocess.Popen(["era", "%s" %jobID], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	p1 = subprocess.Popen(["ansi2html"], stdin=p0.stdout, stdout=subprocess.PIPE)
+	#p1 = subprocess.Popen(["ansi2html"], stdin=p0.stdout, stdout=subprocess.PIPE)
 
-	eraOutput = p1.communicate()[0]
+	eraOutput = p0.communicate()[0]
+	conv = Ansi2HTMLConverter(dark_bg=True)
+	eraOutput = conv.convert(eraOutput)	
 
 	message = """Dear user,
 
-Please review the resource reservation parameters of their jobs on the cluster torn Brain.
-You are using less than 50% of the reserved resources of the job below: """
+Please review the resource reservation parameters of their jobs on the cluster Brain.
+You are using less than 50% of any of the reserved resources of the job below: """
 
 	farewell = """
 Best,
@@ -64,22 +70,28 @@ def ldapSearch(User):
 	ldap_result_id = connection.search(bind_dn,ldap.SCOPE_SUBTREE)
 	result_type, result_data = connection.result(ldap_result_id, 0)
 	return result_data[0][1]["bmail"][0]
+
 	
  
 if __name__ == "__main__":
-	outputList = []
-	processCommands(outputList)
-
-	if len(outputList):
-		eraDF = generateDataFrame(outputList)		
-		eraUniqueDF = eraDF.drop_duplicates(subset='JobID')
-		eraSortDF = eraUniqueDF.sort(['JobID'])
-				
-		if not eraSortDF.empty:
-			for index, row in eraSortDF.iterrows():
-				eraProcess = subprocess.Popen(["era", "%d" % int(row["JobID"])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)				
-				eraOutput = eraProcess.communicate()[0]
-				
-				#email = ldapSearch(row["User"])
-				#print "%s %s" %(row["JobID"], email)
-				sendMail("hpccns@upf.edu",row["JobID"])
+	if os.path.exists(LOG_FILE):
+		outputList = []
+		processCommands(outputList)
+	
+		if len(outputList):
+			eraDF = generateDataFrame(outputList)		
+			eraUniqueDF = eraDF.drop_duplicates(subset='JobID')
+			eraSortDF = eraUniqueDF.sort(['JobID'])
+					
+			if not eraSortDF.empty:
+				for index, row in eraSortDF.iterrows():
+					eraProcess = subprocess.Popen(["era", "%d" % int(row["JobID"])], stdout=subprocess.PIPE, stderr=subprocess.PIPE)				
+					eraOutput = eraProcess.communicate()[0]
+	
+					#email = ldapSearch(row["User"])
+					#sendmail("email",row["JobID"])				
+						
+					sendMail("hpccns@upf.edu",row["JobID"])
+			
+						
+	

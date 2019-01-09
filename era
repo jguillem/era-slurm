@@ -10,8 +10,8 @@ import datetime
 
 LOG_FILE_GOOD = "/var/log/slurm/eraGood.log"
 LOG_FILE_WRONG = "/var/log/slurm/eraWrong.log"
-PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-LD_LIBRARY_PATH = "/usr/local/lib:/usr/lib:/lib"
+#PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+#LD_LIBRARY_PATH = "/usr/local/lib:/usr/lib:/lib"
 
 def formatMEM(memFull):
 
@@ -161,8 +161,8 @@ def printValues():
 	else:	
 		print bcolors.FAIL + "Memory Efficiency (Minimum memory required): %.2f%% \n" %float(eficiMaxMem) + bcolors.ENDC
 	
-	print bcolors.HEADER  + "Minimum memory required by this job until now: %s" %MaxUsedMem + bcolors.ENDC
-	print bcolors.HEADER + "You have reserved this amount: %s\n" %AllocatedMem + bcolors.ENDC
+	print "Minimum memory required by array so far: %s" %MaxUsedMem
+	print "You have reserved this amount: %s\n" %AllocatedMem
 
 def printHelp():
 		print "era [<OPTION>]"
